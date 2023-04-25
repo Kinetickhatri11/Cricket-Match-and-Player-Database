@@ -26,7 +26,9 @@ initializeDbAndServer();
 
 app.get("/players/", async (request, response) => {
   const getPlayersQuery = `
-    SELECT * FROM PLAYER_DETAILS;`;
+    SELECT player_id as playerId,
+    player_name as playerName
+    FROM PLAYER_DETAILS;`;
 
   const playersList = await db.all(getPlayersQuery);
   response.send(playersList);
@@ -38,7 +40,9 @@ app.get("/players/:playerId/", async (request, response) => {
   const { playerId } = request.params;
 
   const getPlayerQuery = `
-    SELECT * FROM PLAYER_DETAILS WHERE PLAYER_ID=${playerId};`;
+    SELECT player_id as playerId,
+    player_name as playerName
+    FROM PLAYER_DETAILS WHERE PLAYER_ID=${playerId};`;
 
   const player = await db.get(getPlayerQuery);
   response.send(player);
@@ -49,11 +53,11 @@ app.get("/players/:playerId/", async (request, response) => {
 app.use(express.json());
 app.put("/players/:playerId/", async (request, response) => {
   const { playerId } = request.params;
-  const playerDetail = response.body;
+  const playerDetail = request.body;
   const { playerName } = playerDetail;
 
   const getPlayerQuery = `
-    UPDATE PLAYER_DETAILS SET PLAYER_NAME=${playerName}
+    UPDATE PLAYER_DETAILS SET PLAYER_NAME='${playerName}'
     WHERE PLAYER_ID=${playerId};`;
 
   const player = await db.run(getPlayerQuery);
@@ -65,18 +69,20 @@ app.get("/matches/:matchId/", async (request, response) => {
   const { matchId } = request.params;
 
   const getMatchQuery = `
-    SELECT * FROM MATCH_DETAILS WHERE MATCH_ID=${matchId};`;
+    SELECT match_id as matchId,match,year FROM MATCH_DETAILS WHERE MATCH_ID=${matchId};`;
 
   const match = await db.get(getMatchQuery);
   response.send(match);
 });
 
 //Returning a list of all the matches of a player
-app.get("players/:playerId/matches/", async (request, response) => {
+app.get("/players/:playerId/matches/", async (request, response) => {
   const { playerId } = request.params;
 
   const getMatchQuery = `
-    SELECT * FROM PLAYER_MATCH_SCORE
+    SELECT match_details.match_id as matchId,
+    match_details.match as match,
+    match_details.year as year FROM PLAYER_MATCH_SCORE
     NATURAL JOIN MATCH_DETAILS WHERE PLAYER_ID=${playerId};`;
 
   const match = await db.all(getMatchQuery);
@@ -100,7 +106,7 @@ app.get("/matches/:matchId/players", async (request, response) => {
 
 //Returning the statistics of the total score, fours, sixes of a specific player based on the player ID
 
-app.get("players/:playerId/playerScores/", async (request, response) => {
+app.get("/players/:playerId/playerScores/", async (request, response) => {
   const { playerId } = request.params;
 
   const getPlayerScored = `
